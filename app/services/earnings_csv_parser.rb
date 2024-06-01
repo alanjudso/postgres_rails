@@ -2,6 +2,8 @@ require 'csv'
 require_relative '../models/earning'  # Add this line if Earning model is not being loaded
 
 class EarningsCsvParser
+  STRING = 'STRING'.freeze
+  DECIMAL = 'DECIMAL'.freeze
   # file = CSV string
   def initialize(file, employer_id)
       @file = file
@@ -26,7 +28,7 @@ class EarningsCsvParser
   private
 
   def get_employer_csv_format
-    EmployerCsvFormat.find_by(employer_id: @employer.id)
+    EmployerCsvFormat.find_by!(employer_id: @employer.id)
   end
   
   def get_employer employer_id
@@ -34,7 +36,6 @@ class EarningsCsvParser
   end
   
   def get_employee_id external_ref
-    puts external_ref
     Employee.find_by(external_ref: external_ref, employer_id: @employer.id)&.id
   end
   
@@ -56,26 +57,27 @@ class EarningsCsvParser
       new_date = Date.strptime(date, strftime_format).strftime("%b %d, %Y")
       return new_date
     rescue Date::Error => e
-      puts "Invalid date: #{date} cannot be parsed with format #{strftime_format}"
+      Rails.logger.info "Invalid date: #{date} cannot be parsed with format #{strftime_format}"
       nil
     end
   end
 
-  def format_amount row
-    amount_header = @employer_csv_format.amount_header
-    amount_format = @employer_csv_format.amount_format
-    amount = row[amount_header]
-    if amount_format == 'STRING'
+  def format_amount(row)
+    amount = row[@employer_csv_format.amount_header]
+    case @employer_csv_format.amount_format
+    when STRING
       amount.gsub(/[^0-9.]/, '').to_f
-    elsif amount_format == 'DECIMAL'
+    when DECIMAL
       amount.to_f
+    else
+      Rails.logger.info "Unknown amount format: #{@employer_csv_format.amount_format}"
     end
   end
 
   def display_errors errors
     if errors.any?
-      puts "There were errors with the following rows: "
-      errors.each { |error| puts error }
+      Rails.logger.info "There were errors with the following rows: "
+      errors.each { |error| Rails.logger.info error }
     end
   end
 end

@@ -4,11 +4,13 @@ class EarningsCsvParserTest < ActiveSupport::TestCase
   def setup
     @first_employer = Employer.create(name: "Acme Co")
     @second_employer = Employer.create(name: "BetaCo")
-    
-    @first_employer.employees.create(name: "John Doe", external_ref: "A123")
-    @first_employer.employees.create(name: "Jane Doe", external_ref: "B456")
-    @second_employer.employees.create(name: "John Smith", external_ref: "123")
-    @second_employer.employees.create(name: "Jane Smith", external_ref: "456")
+    @third_employer = Employer.create(name: "GammaCo")
+
+    @first_employer.employees.create(name: "Alan Judson", external_ref: "A123")
+    @first_employer.employees.create(name: "Danila Szabo", external_ref: "B456")
+    @second_employer.employees.create(name: "Daniel Sabourin", external_ref: "123")
+    @second_employer.employees.create(name: "Yuval Kordov", external_ref: "456")
+    @third_employer.employees.create(name: "Daniel Johnston", external_ref: "789")
     
     EmployerCsvFormat.create(employer: @first_employer, external_ref_header: "EmployeeNumber", date_header: "CheckDate", date_format: "%m/%d/%Y", amount_header: "Amount", amount_format: "STRING")
     EmployerCsvFormat.create(employer: @second_employer, external_ref_header: "employee", date_header: "earningDate", date_format: "%Y-%m-%d", amount_header: "netAmount", amount_format: "DECIMAL")
@@ -45,6 +47,13 @@ class EarningsCsvParserTest < ActiveSupport::TestCase
   test "show return errors if there's no employer" do
     assert_raises ActiveRecord::RecordNotFound do
       parser = EarningsCsvParser.new(@csv_1, 999)
+      parser.create_earnings
+    end
+  end
+
+  test "show return errors if there's no employer csv format" do
+    assert_raises ActiveRecord::RecordNotFound do
+      parser = EarningsCsvParser.new(@csv_1, @third_employer.id)
       parser.create_earnings
     end
   end
