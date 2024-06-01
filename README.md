@@ -2,10 +2,14 @@
 
 Hi - I've added seed data!
 
+- Make sure you're using ruby-3.2.2
+- Run `bundle install`
 - Database creation
-  `rails db:migrate`
+  `bin/rails db:create`
+  `bin/rails db:migrate`
+  `bin/rails db:migrate RAILS_ENV=test`
 - Database initialization
-  `rails db:seed`
+  `bin/rails db:seed`
 - Ruby version
   ruby-3.2.2
 - How to run it in console?
